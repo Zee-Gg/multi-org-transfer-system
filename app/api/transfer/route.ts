@@ -5,11 +5,36 @@ import { sendTransferNotification } from "@/lib/email";
 import { ok, err, unauthorized, zodError, serverError } from "@/lib/response";
 import sql from "@/lib/db";
 import { ZodError } from "zod";
+import { logAuditEvent, AuditEventType, getIpAddress } from "@/lib/logging";
 
 export async function POST(req: NextRequest) {
+  const ipAddress = getIpAddress(req.headers);
+  
   try {
     const session = await getSession();
-    if (!session) return unauthorized();
+    if (!session) {
+      // Log unauthorized transfer attempt
+      await logAuditEvent({
+        eventType: AuditEventType.UNAUTHORIZED_ACCESS,
+        email: "unknown",
+        ipAddress,
+        action: "Transfer attempted without session",
+        result: "failure",
+      }).catch(() => {});
+
+      return unauthorized();
+    }
+
+    // Log transfer initiated
+    await logAuditEvent({
+      eventType: AuditEventType.TRANSFER_INITIATED,
+      email: session.email,
+      orgId: session.orgId,
+      ipAddress,
+      action: "Transfer initiated",
+      result: "success",
+      details: { endpoint: "transfer" },
+    }).catch(() => {});
 
     const body = await req.json().catch(() => ({}));
     const { message } = transferSchema.parse(body);
@@ -18,7 +43,20 @@ export async function POST(req: NextRequest) {
     const [toOrg] = await sql`
       SELECT id, name, email FROM organizations WHERE id != ${session.orgId} LIMIT 1
     `;
-    if (!toOrg) return err("No recipient organization found.", 400);
+    if (!toOrg) {
+      // Log transfer failed - no recipient
+      await logAuditEvent({
+        eventType: AuditEventType.TRANSFER_FAILED,
+        email: session.email,
+        orgId: session.orgId,
+        ipAddress,
+        action: "Transfer failed - no recipient org",
+        result: "failure",
+        errorMessage: "No recipient organization found",
+      }).catch(() => {});
+
+      return err("No recipient organization found.", 400);
+    }
 
     // Get all source rows
     const sourceRows = await sql`
@@ -27,6 +65,17 @@ export async function POST(req: NextRequest) {
       WHERE  org_id = ${session.orgId}
     `;
     if (sourceRows.length === 0) {
+      // Log transfer failed - no data
+      await logAuditEvent({
+        eventType: AuditEventType.TRANSFER_FAILED,
+        email: session.email,
+        orgId: session.orgId,
+        ipAddress,
+        action: "Transfer failed - no data",
+        result: "failure",
+        errorMessage: "No data to transfer",
+      }).catch(() => {});
+
       return err("No data to transfer. Add some rows first.", 400);
     }
 
@@ -44,11 +93,27 @@ export async function POST(req: NextRequest) {
       `;
     }
 
-    // Log transfer
+    // Log transfer in audit trail
     await sql`
       INSERT INTO transfers (from_org_id, to_org_id, message, row_count)
       VALUES (${session.orgId}, ${toOrg.id}, ${message ?? null}, ${sourceRows.length})
     `;
+
+    // Log successful transfer
+    await logAuditEvent({
+      eventType: AuditEventType.TRANSFER_COMPLETED,
+      email: session.email,
+      orgId: session.orgId,
+      ipAddress,
+      action: "Data transfer completed",
+      result: "success",
+      details: {
+        toOrgId: toOrg.id,
+        toOrgName: toOrg.name,
+        rowCount: sourceRows.length,
+        message: message ?? "No message",
+      },
+    }).catch(() => {});
 
     // Send email notification (non-blocking — don't fail the transfer if email fails)
     sendTransferNotification({
@@ -64,16 +129,51 @@ export async function POST(req: NextRequest) {
       `${sourceRows.length} records transferred to ${toOrg.name}.`
     );
   } catch (e) {
+    // Log system errors
+    const session = await getSession().catch(() => null);
+    await logAuditEvent({
+      eventType: AuditEventType.SYSTEM_ERROR,
+      email: session?.email,
+      orgId: session?.orgId,
+      ipAddress,
+      action: "transfer POST error",
+      result: "failure",
+      errorMessage: e instanceof Error ? e.message : String(e),
+    }).catch(() => {});
+
     if (e instanceof ZodError) return zodError(e.issues);
     return serverError(`transfer: ${e}`);
   }
 }
 
 // GET — transfer history for this org
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const ipAddress = getIpAddress(req.headers);
+
   try {
     const session = await getSession();
-    if (!session) return unauthorized();
+    if (!session) {
+      // Log unauthorized access
+      await logAuditEvent({
+        eventType: AuditEventType.UNAUTHORIZED_ACCESS,
+        email: "unknown",
+        ipAddress,
+        action: "Transfer history accessed without session",
+        result: "failure",
+      }).catch(() => {});
+
+      return unauthorized();
+    }
+
+    // Log transfer history access
+    await logAuditEvent({
+      eventType: AuditEventType.DATA_VIEWED,
+      email: session.email,
+      orgId: session.orgId,
+      ipAddress,
+      action: "Transfer history viewed",
+      result: "success",
+    }).catch(() => {});
 
     const transfers = await sql`
       SELECT
@@ -91,6 +191,18 @@ export async function GET() {
 
     return ok({ transfers });
   } catch (e) {
+    // Log system errors
+    const session = await getSession().catch(() => null);
+    await logAuditEvent({
+      eventType: AuditEventType.SYSTEM_ERROR,
+      email: session?.email,
+      orgId: session?.orgId,
+      ipAddress,
+      action: "transfer GET error",
+      result: "failure",
+      errorMessage: e instanceof Error ? e.message : String(e),
+    }).catch(() => {});
+
     return serverError(`transfer/history: ${e}`);
   }
 }
