@@ -2,6 +2,7 @@
 import { useState, useCallback } from "react";
 import DashboardHeader  from "@/components/dashboard/DashboardHeader";
 import StatsBar         from "@/components/dashboard/StatsBar";
+import RowSearch        from "@/components/dashboard/RowSearch";
 import DataTable        from "@/components/dashboard/DataTable";
 import TransferModal    from "@/components/dashboard/TransferModal";
 import AddRowButton     from "@/components/dashboard/AddRowButton";
@@ -15,7 +16,7 @@ interface Props { session: SessionPayload }
 export default function DashboardShell({ session }: Props) {
   const {
     rows, total, page, totalPages, loading, deletingId,
-    pageSize, setPage, deleteRow, addRow, refresh,
+    pageSize, setPage, deleteRow, addRow, refresh, search, searchQuery,
   } = useRows();
 
   const [showTransfer, setShowTransfer] = useState(false);
@@ -51,8 +52,15 @@ export default function DashboardShell({ session }: Props) {
         <StatsBar
           total={total}
           orgName={session.orgName}
+          orgSlug={session.orgSlug}
           onTransfer={() => setShowTransfer(true)}
           onAddRow={() => setShowAddRow(true)}
+        />
+
+        <RowSearch 
+          onSearch={search}
+          loading={loading}
+          resultCount={searchQuery ? total : undefined}
         />
 
         <DataTable
