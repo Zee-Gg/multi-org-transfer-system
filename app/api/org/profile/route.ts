@@ -2,11 +2,25 @@ import { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth";
 import { ok, unauthorized, serverError } from "@/lib/response";
 import sql from "@/lib/db";
+import { logAuditEvent, AuditEventType, getIpAddress } from "@/lib/logging";
 
 export async function GET(req: NextRequest) {
+  const ipAddress = getIpAddress(req.headers);
+
   try {
     const session = await getSession();
-    if (!session) return unauthorized();
+    if (!session) {
+      // Log unauthorized access
+      await logAuditEvent({
+        eventType: AuditEventType.UNAUTHORIZED_ACCESS,
+        email: "unknown",
+        ipAddress,
+        action: "Profile accessed without session",
+        result: "failure",
+      }).catch(() => {});
+
+      return unauthorized();
+    }
 
     // Get organization details
     const org = await sql`
@@ -44,8 +58,31 @@ export async function GET(req: NextRequest) {
       rowsReceived: transferStats.rows_received,
     };
 
+    // Log profile access
+    await logAuditEvent({
+      eventType: AuditEventType.DATA_VIEWED,
+      email: session.email,
+      orgId: session.orgId,
+      ipAddress,
+      action: "Organization profile viewed",
+      result: "success",
+      details: { orgName: org[0].name, totalRows: rowCount.total, totalTransfers: transferStats.total_transfers },
+    }).catch(() => {});
+
     return ok({ profile });
   } catch (e) {
+    // Log system errors
+    const session = await getSession().catch(() => null);
+    await logAuditEvent({
+      eventType: AuditEventType.SYSTEM_ERROR,
+      email: session?.email,
+      orgId: session?.orgId,
+      ipAddress,
+      action: "org/profile error",
+      result: "failure",
+      errorMessage: e instanceof Error ? e.message : String(e),
+    }).catch(() => {});
+
     return serverError(`org/profile: ${e}`);
   }
 }
