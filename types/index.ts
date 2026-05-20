@@ -56,6 +56,8 @@ export interface ApiSuccess<T = unknown> {
 export interface ApiError {
   success: false;
   error: string;
+  code?: string;
+  details?: Record<string, unknown>;
 }
 export interface ToastData {
   id: string;
