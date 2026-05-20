@@ -1,11 +1,12 @@
 interface Props {
   total: number;
   orgName: string;
+  orgSlug: string;
   onTransfer: () => void;
   onAddRow: () => void;
 }
 
-export default function StatsBar({ total, orgName, onTransfer, onAddRow }: Props) {
+export default function StatsBar({ total, orgName, orgSlug, onTransfer, onAddRow }: Props) {
   return (
     <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
@@ -17,7 +18,17 @@ export default function StatsBar({ total, orgName, onTransfer, onAddRow }: Props
         </p>
       </div>
 
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+        <a
+          href={`/dashboard/${orgSlug}/transfers`}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="hidden sm:inline">History</span>
+        </a>
+
         <button
           onClick={onAddRow}
           className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow"
