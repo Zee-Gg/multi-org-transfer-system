@@ -84,7 +84,7 @@ export async function checkRateLimit(options: RateLimitOptions): Promise<{
 }> {
   const limiter = new Ratelimit({
     redis: redis,
-    limiter: Ratelimit.slidingWindow(options.limit, options.window),
+    limiter: Ratelimit.slidingWindow(options.limit, options.window as "60 s"),
     prefix: options.prefix || "ratelimit",
   });
 
@@ -93,7 +93,7 @@ export async function checkRateLimit(options: RateLimitOptions): Promise<{
   return {
     success: result.success,
     remaining: result.remaining,
-    resetAfter: result.resetAfter,
+    resetAfter: result.reset as number,
   };
 }
 
@@ -102,8 +102,7 @@ export async function checkRateLimit(options: RateLimitOptions): Promise<{
  */
 export async function recordRateLimitViolation(
   ipAddress: string,
-  endpoint: string,
-  details?: Record<string, any>
+  endpoint: string
 ): Promise<void> {
   try {
     // Store in Redis with 24-hour TTL
