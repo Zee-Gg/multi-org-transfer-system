@@ -36,9 +36,26 @@ async function seed() {
         to_org_id INTEGER NOT NULL REFERENCES organizations(id),
         message TEXT, row_count INTEGER NOT NULL, transferred_at TIMESTAMPTZ DEFAULT NOW()
       )`;
+    await sql`
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id            SERIAL PRIMARY KEY,
+        event_type    TEXT NOT NULL,
+        org_id        INTEGER REFERENCES organizations(id),
+        email         TEXT,
+        ip_address    TEXT NOT NULL,
+        action        TEXT NOT NULL,
+        details       JSONB,
+        result        TEXT NOT NULL CHECK (result IN ('success', 'failure')),
+        error_message TEXT,
+        created_at    TIMESTAMPTZ DEFAULT NOW()
+      )`;
     await sql`CREATE INDEX IF NOT EXISTS idx_data_rows_org_id ON data_rows(org_id)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_otp_email ON otp_tokens(email, used, expires_at)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_transfers_to ON transfers(to_org_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_org_id ON audit_logs(org_id, created_at DESC)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_email ON audit_logs(email, created_at DESC)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_ip ON audit_logs(ip_address, created_at DESC)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_audit_logs_event ON audit_logs(event_type, created_at DESC)`;
     console.log("✅ Tables ready\n");
 
     // Upsert both orgs
