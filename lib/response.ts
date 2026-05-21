@@ -22,7 +22,7 @@ export function err(error: string, status = 400, code?: string) {
 export function handleAppError(error: AppError) {
   errorLogger.error(error.message, error, error.context);
   
-  const body: any = {
+  const body: { success: false; error: string; code: string; details?: unknown } = {
     success: false,
     error: error.message,
     code: error.code,

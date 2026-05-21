@@ -38,13 +38,13 @@ export interface ErrorContext {
   message: string;
   context?: string;
   originalError?: Error;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export class AppError extends Error {
   code: ErrorCode;
   statusCode: number;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   context?: string;
 
   constructor(errorContext: ErrorContext) {
@@ -71,7 +71,7 @@ export class AppError extends Error {
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string, details?: Record<string, any>) {
+  constructor(message: string, details?: Record<string, unknown>) {
     super({
       code: ErrorCode.VALIDATION_ERROR,
       statusCode: 422,
@@ -133,7 +133,7 @@ export class ConflictError extends AppError {
 
 export class RateLimitError extends AppError {
   constructor(retryAfter?: number) {
-    const details: Record<string, any> = {};
+    const details: Record<string, unknown> = {};
     if (retryAfter) details.retryAfter = retryAfter;
 
     super({
