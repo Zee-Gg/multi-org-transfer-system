@@ -21,7 +21,13 @@ export async function signToken(payload: SessionPayload): Promise<string> {
 export async function verifyToken(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret());
-    return payload as unknown as SessionPayload;
+    // Explicitly extract only serializable fields to avoid passing class instances to Client Components
+    return {
+      orgId: (payload.orgId as number) || 0,
+      email: (payload.email as string) || "",
+      orgName: (payload.orgName as string) || "",
+      orgSlug: (payload.orgSlug as string) || "",
+    };
   } catch {
     return null;
   }
