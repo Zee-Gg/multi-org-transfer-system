@@ -10,8 +10,8 @@ interface Profile {
   created_at: string;
   totalRows: number;
   totalTransfers: number;
-  rowsSent: number;
-  rowsReceived: number;
+  transfersSent: number;
+  transfersReceived: number;
 }
 
 export default function OrgProfile() {
@@ -72,8 +72,8 @@ export default function OrgProfile() {
   const stats = [
     { label: "Total Records", value: profile.totalRows, color: "bg-blue-50 text-blue-700" },
     { label: "Transfers", value: profile.totalTransfers, color: "bg-indigo-50 text-indigo-700" },
-    { label: "Records Sent", value: profile.rowsSent, color: "bg-emerald-50 text-emerald-700" },
-    { label: "Records Received", value: profile.rowsReceived, color: "bg-amber-50 text-amber-700" },
+    { label: "Transfers Sent", value: profile.transfersSent, color: "bg-emerald-50 text-emerald-700" },
+    { label: "Transfers Received", value: profile.transfersReceived, color: "bg-amber-50 text-amber-700" },
   ];
 
   return (
