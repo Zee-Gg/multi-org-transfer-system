@@ -43,10 +43,7 @@ export const addRowSchema = z.object({
 });
 
 export const deleteRowSchema = z.object({
-  id: z
-    .number()
-    .int("ID must be an integer")
-    .positive("ID must be positive"),
+  id: z.string().uuid("Invalid row ID"),
 });
 
 export type SendOtpInput    = z.infer<typeof sendOtpSchema>;

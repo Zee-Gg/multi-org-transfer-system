@@ -1,18 +1,30 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-if (!process.env.RESEND_API_KEY) {
-  console.warn("RESEND_API_KEY not set — emails will not be sent");
-}
+if (!process.env.SMTP_HOST) throw new Error("SMTP_HOST is not set");
+if (!process.env.SMTP_USER) throw new Error("SMTP_USER is not set");
+if (!process.env.SMTP_PASS) throw new Error("SMTP_PASS is not set");
 
-const resend = new Resend(process.env.RESEND_API_KEY ?? "");
-const FROM   = process.env.EMAIL_FROM ?? "DataBridge <no-reply@databridge.app>";
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT) || 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
+const FROM = process.env.EMAIL_FROM ?? "DataBridge <no-reply@databridge.app>";
 
 export async function sendOTPEmail(
   to: string,
   code: string,
   orgName: string
 ): Promise<void> {
-  await resend.emails.send({
+  await transporter.sendMail({
     from: FROM,
     to,
     subject: `${code} is your DataBridge login code`,
@@ -75,7 +87,7 @@ export async function sendTransferNotification(opts: {
       </div>`
     : "";
 
-  await resend.emails.send({
+  await transporter.sendMail({
     from: FROM,
     to,
     subject: `${fromOrgName} transferred data to ${toOrgName}`,
