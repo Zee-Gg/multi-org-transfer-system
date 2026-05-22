@@ -1,39 +1,51 @@
 export interface Organization {
-  id: number;
+  id: string;
   name: string;
   email: string;
   slug: string;
   created_at: string;
 }
 
+export interface User {
+  id: string;
+  org_id: string;
+  email: string;
+  name: string | null;
+  created_at: string;
+}
+
 export interface DataRow {
-  id: number;
-  org_id: number;
+  id: string;
+  org_id: string;
+  transfer_id: string | null;
   field_one: string;
   field_two: string;
   field_three: string;
+  is_deleted: boolean;
   created_at: string;
 }
 
 export interface Transfer {
-  id: number;
-  from_org_id: number;
-  to_org_id: number;
+  id: string;
+  from_org_id: string;
+  to_org_id: string;
   message: string | null;
-  row_count: number;
+  initiated_by: string;
   transferred_at: string;
 }
 
 export interface OtpToken {
-  id: number;
-  email: string;
-  code: string;
+  id: string;
+  user_id: string;
+  token: string;
   expires_at: string;
   used: boolean;
+  created_at: string;
 }
 
 export interface SessionPayload {
-  orgId: number;
+  userId: string;
+  orgId: string;
   email: string;
   orgName: string;
   orgSlug: string;
@@ -59,6 +71,7 @@ export interface ApiError {
   code?: string;
   details?: Record<string, unknown>;
 }
+
 export interface ToastData {
   id: string;
   message: string;

@@ -23,7 +23,8 @@ export async function verifyToken(token: string): Promise<SessionPayload | null>
     const { payload } = await jwtVerify(token, getSecret());
     // Explicitly extract only serializable fields to avoid passing class instances to Client Components
     return {
-      orgId: (payload.orgId as number) || 0,
+      orgId: (payload.orgId as string) || "",
+      userId: (payload.userId as string) || "",
       email: (payload.email as string) || "",
       orgName: (payload.orgName as string) || "",
       orgSlug: (payload.orgSlug as string) || "",

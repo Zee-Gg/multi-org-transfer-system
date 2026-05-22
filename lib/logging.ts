@@ -47,7 +47,7 @@ export interface AuditLog {
   email?: string;
   ip_address: string;
   action: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   result: "success" | "failure";
   error_message?: string;
   created_at: string;
@@ -63,7 +63,7 @@ export async function logAuditEvent(params: {
   ipAddress: string;
   action: string;
   result: "success" | "failure";
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   errorMessage?: string;
 }): Promise<void> {
   try {
