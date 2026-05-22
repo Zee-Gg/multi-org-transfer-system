@@ -3,8 +3,7 @@ import { useState, useEffect } from "react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 interface Transfer {
-  id: number;
-  row_count: number;
+  id: string;
   message: string | null;
   transferred_at: string;
   from_org_name: string;
@@ -123,12 +122,11 @@ export default function ReceivedTransfers() {
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-sm font-bold text-emerald-600">
-                  {transfer.row_count.toLocaleString()}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {transfer.row_count === 1 ? "record" : "records"}
-                </p>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full 
+                bg-emerald-50 border border-emerald-100 text-xs font-medium 
+                text-emerald-700">
+                  Received
+                </span>
               </div>
             </div>
 
