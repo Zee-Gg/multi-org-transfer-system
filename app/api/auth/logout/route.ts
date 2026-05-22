@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     await logAuditEvent({
       eventType: AuditEventType.AUTH_LOGOUT,
       email: session.email,
-      orgId: session.orgId,
+      orgId: session?.orgId ? Number(session.orgId) : undefined,
       ipAddress,
       action: "User logged out",
       result: "success",
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     await logAuditEvent({
       eventType: AuditEventType.SYSTEM_ERROR,
       email: session?.email,
-      orgId: session?.orgId,
+      orgId: session?.orgId ? Number(session.orgId) : undefined,
       ipAddress,
       action: "logout error",
       result: "failure",
