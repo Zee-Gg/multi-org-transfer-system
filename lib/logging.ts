@@ -109,7 +109,7 @@ export async function getAuditLogs(
       ORDER BY created_at DESC
       LIMIT ${limit}
       OFFSET ${offset}
-    `;
+    ` as unknown as Promise<AuditLog[]>;
   }
 
   return sql`
@@ -118,7 +118,7 @@ export async function getAuditLogs(
     ORDER BY created_at DESC
     LIMIT ${limit}
     OFFSET ${offset}
-  `;
+  ` as unknown as Promise<AuditLog[]>;
 }
 
 /**
@@ -140,7 +140,7 @@ export async function getAuditLogsByEmail(
     ORDER BY created_at DESC
     LIMIT ${limit}
     OFFSET ${offset}
-  `;
+  ` as unknown as Promise<AuditLog[]>;
 }
 
 /**
@@ -162,7 +162,7 @@ export async function getAuditLogsByIp(
     ORDER BY created_at DESC
     LIMIT ${limit}
     OFFSET ${offset}
-  `;
+  ` as unknown as Promise<AuditLog[]>;
 }
 
 /**
@@ -210,9 +210,10 @@ export async function cleanOldAuditLogs(retentionDays: number = 90): Promise<voi
     const result = await sql`
       DELETE FROM audit_logs
       WHERE created_at < NOW() - MAKE_INTERVAL(days => ${retentionDays})
-    `;
+    ` as unknown as Array<{count?: number}>;
 
-    errorLogger.log(`Cleaned old audit logs`, `Deleted ${result.count} records older than ${retentionDays} days`);
+    const deletedCount = Array.isArray(result) && result[0]?.count ? result[0].count : 0;
+    errorLogger.log(`Cleaned old audit logs`, `Deleted ${deletedCount} records older than ${retentionDays} days`);
   } catch (error) {
     errorLogger.error("Failed to clean old audit logs", error);
   }
