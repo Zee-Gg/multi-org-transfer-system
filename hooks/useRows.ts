@@ -10,7 +10,7 @@ export function useRows() {
   const [page, setPage]         = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading]   = useState(true);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchRows = useCallback(async (p: number, query: string = "") => {
@@ -39,7 +39,7 @@ export function useRows() {
     return () => clearTimeout(timeout);
   }, [page, searchQuery, fetchRows]);
 
-  const deleteRow = useCallback(async (id: number): Promise<boolean> => {
+  const deleteRow = useCallback(async (id: string): Promise<boolean> => {
     setDeletingId(id);
     try {
       const res = await fetch("/api/rows/delete", {

@@ -5,7 +5,7 @@ import type { DataRow } from "@/types";
 interface Props {
   row: DataRow;
   index: number;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
   isDeleting: boolean;
 }
 

@@ -41,15 +41,15 @@ export enum AuditEventType {
 }
 
 export interface AuditLog {
-  id: number;
+  id: string;
   event_type: AuditEventType;
-  org_id?: number;
+  org_id?: string;
   email?: string;
   ip_address: string;
   action: string;
   details?: Record<string, unknown>;
   result: "success" | "failure";
-  error_message?: string;
+  error_msg?: string;
   created_at: string;
 }
 
@@ -58,7 +58,7 @@ export interface AuditLog {
  */
 export async function logAuditEvent(params: {
   eventType: AuditEventType;
-  orgId?: number;
+  orgId?: string;
   email?: string;
   ipAddress: string;
   action: string;
@@ -69,7 +69,7 @@ export async function logAuditEvent(params: {
   try {
     await sql`
       INSERT INTO audit_logs (
-        event_type, org_id, email, ip_address, action, details, result, error_message
+        event_type, org_id, email, ip_address, action, details, result, error_msg
       )
       VALUES (
         ${params.eventType},
@@ -92,7 +92,7 @@ export async function logAuditEvent(params: {
  * Get audit logs for an organization
  */
 export async function getAuditLogs(
-  orgId: number,
+  orgId: string,
   options: {
     limit?: number;
     offset?: number;
@@ -177,7 +177,7 @@ export async function getFailedLoginAttempts(
     FROM audit_logs
     WHERE email = ${email}
       AND event_type IN (${AuditEventType.AUTH_LOGIN_FAILED}, ${AuditEventType.AUTH_OTP_FAILED})
-      AND created_at > NOW() - INTERVAL '${windowMinutes} minutes'
+      AND created_at > NOW() - MAKE_INTERVAL(mins => ${windowMinutes})
   `;
 
   return result[0]?.count ?? 0;
@@ -195,7 +195,7 @@ export async function getRateLimitViolations(
     FROM audit_logs
     WHERE ip_address = ${ipAddress}
       AND event_type = ${AuditEventType.RATE_LIMITED}
-      AND created_at > NOW() - INTERVAL '${windowMinutes} minutes'
+      AND created_at > NOW() - MAKE_INTERVAL(mins => ${windowMinutes})
   `;
 
   return result[0]?.count ?? 0;
@@ -209,7 +209,7 @@ export async function cleanOldAuditLogs(retentionDays: number = 90): Promise<voi
   try {
     const result = await sql`
       DELETE FROM audit_logs
-      WHERE created_at < NOW() - INTERVAL '${retentionDays} days'
+      WHERE created_at < NOW() - MAKE_INTERVAL(days => ${retentionDays})
     `;
 
     errorLogger.log(`Cleaned old audit logs`, `Deleted ${result.count} records older than ${retentionDays} days`);

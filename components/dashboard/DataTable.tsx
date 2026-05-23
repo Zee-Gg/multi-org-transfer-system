@@ -9,9 +9,9 @@ interface Props {
   page: number;
   totalPages: number;
   loading: boolean;
-  deletingId: number | null;
+  deletingId: string | null;
   pageSize: number;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
   onPageChange: (page: number) => void;
 }
 

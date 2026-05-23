@@ -28,7 +28,7 @@ export default function DashboardShell({ session }: Props) {
     setTimeout(() => setToast(null), 4500);
   }, []);
 
-  async function handleDelete(id: number) {
+  async function handleDelete(id: string) {
     const ok = await deleteRow(id);
     if (ok) showToast("Row deleted successfully");
     else showToast("Failed to delete row", "error");
