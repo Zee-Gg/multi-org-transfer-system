@@ -102,6 +102,7 @@ export default function DashboardHeader({ session }: Props) {
     <NotificationInbox
       isOpen={showNotifications}
       onClose={() => setShowNotifications(false)}
+      orgSlug={session.orgSlug}
     />
     </>
   );

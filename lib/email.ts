@@ -1,21 +1,29 @@
 import nodemailer from "nodemailer";
 
-if (!process.env.SMTP_HOST) throw new Error("SMTP_HOST is not set");
-if (!process.env.SMTP_USER) throw new Error("SMTP_USER is not set");
-if (!process.env.SMTP_PASS) throw new Error("SMTP_PASS is not set");
+let _transporter: nodemailer.Transporter | null = null;
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+function getTransporter() {
+  if (_transporter) return _transporter;
+  
+  if (!process.env.SMTP_HOST) throw new Error("SMTP_HOST is not set");
+  if (!process.env.SMTP_USER) throw new Error("SMTP_USER is not set");
+  if (!process.env.SMTP_PASS) throw new Error("SMTP_PASS is not set");
+
+  _transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
+  
+  return _transporter;
+}
 
 const FROM = process.env.EMAIL_FROM ?? "DataBridge <no-reply@databridge.app>";
 
@@ -24,7 +32,7 @@ export async function sendOTPEmail(
   code: string,
   orgName: string
 ): Promise<void> {
-  await transporter.sendMail({
+  await getTransporter().sendMail({
     from: FROM,
     to,
     subject: `${code} is your DataBridge login code`,
@@ -87,7 +95,7 @@ export async function sendTransferNotification(opts: {
       </div>`
     : "";
 
-  await transporter.sendMail({
+  await getTransporter().sendMail({
     from: FROM,
     to,
     subject: `${fromOrgName} transferred data to ${toOrgName}`,
