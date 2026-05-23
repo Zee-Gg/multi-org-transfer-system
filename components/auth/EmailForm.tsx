@@ -25,10 +25,22 @@ export default function EmailForm({ onSuccess }: Props) {
       });
       const data = await res.json();
 
-      if (!res.ok && res.status !== 200) {
+      if (!res.ok) {
         setError(data.error ?? "Something went wrong");
         return;
       }
+
+      if (!data.success) {
+        setError(data.error ?? "Something went wrong");
+        return;
+      }
+
+      // Only proceed if registered is explicitly true
+      if (data.data?.registered === false) {
+        setError("This email is not registered with any organization.");
+        return;
+      }
+
       onSuccess(email);
     } catch {
       setError("Network error. Please try again.");

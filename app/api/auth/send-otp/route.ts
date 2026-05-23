@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
         action: "OTP requested for unregistered email",
         result: "failure",
       }).catch(() => {});
-      return ok(undefined, "If this email is registered, a code will be sent.");
+      return ok({ registered: false }, "If this email is registered, a code will be sent.");
     }
 
     const user = users[0];
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       result: "success",
     }).catch(() => {});
 
-    return ok(undefined, "Login code sent. Check your email.");
+    return ok({ registered: true }, "Login code sent. Check your email.");
   } catch (e) {
     await logAuditEvent({
       eventType: AuditEventType.SYSTEM_ERROR,
