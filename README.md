@@ -1,8 +1,3 @@
-
-```
-Create a new file called README.md in the root of the project.
-Replace its entire contents with this:
-
 # DataBridge
 
 A multi-organization data management and transfer system built with Next.js, 
