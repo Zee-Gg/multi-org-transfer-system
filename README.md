@@ -181,6 +181,4 @@ npx ts-node --project tsconfig.seed.json scripts/seed.ts
 
 ```
 
----
 
-Paste the reply here.
